@@ -1,0 +1,516 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Shop stylish women's three-piece sets and clothing online at Inshiyaa, Bangladesh">
+    <title>Inshiyaa - Women's Fashion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Sign-In Library -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .carousel-item {
+            transition: transform 0.7s ease-in-out;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .lazy-load {
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .lazy-load.loaded {
+            opacity: 1;
+        }
+        .parallax {
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .parallax::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .g-signin2 {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-purple-50 to-pink-50 font-sans">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-purple-800 to-pink-700 text-white py-4 sticky top-0 z-20 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center px-4">
+            <h1 class="text-3xl font-extrabold tracking-tight"><a href="#home">Inshiyaa</a></h1>
+            <nav class="space-x-6 flex items-center">
+                <a href="#home" class="hover:text-yellow-300 transition">Home</a>
+                <a href="#products" class="hover:text-yellow-300 transition">Products</a>
+                <a href="#about" class="hover:text-yellow-300 transition">About</a>
+                <a href="#contact" class="hover:text-yellow-300 transition">Contact</a>
+                <a href="#cart" class="hover:text-yellow-300 transition relative">
+                    <i class="fas fa-shopping-cart"></i> Cart (<span id="cart-count">0</span>)
+                    <span id="cart-preview" class="absolute top-8 right-0 hidden bg-white text-gray-800 p-4 rounded-lg shadow-lg w-64">
+                        <p id="cart-preview-content">Your cart is empty</p>
+                    </span>
+                </a>
+                <button id="sign-in-btn" class="bg-yellow-400 text-black px-4 py-2 rounded-full hover:bg-yellow-500 transition">Sign In</button>
+                <span id="user-info" class="hidden text-sm"></span>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sign-In Modal -->
+    <div id="sign-in-modal" class="modal">
+        <div class="bg-white p-8 rounded-lg max-w-sm w-full relative">
+            <button id="close-sign-in-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Sign In to Inshiyaa</h3>
+            <div id="google-sign-in" class="g-signin2 mb-4" data-onsuccess="onSignIn"></div>
+            <button id="facebook-sign-in" class="flex items-center justify-center w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition">
+                <i class="fab fa-facebook-f mr-2"></i> Sign In with Facebook
+            </button>
+            <p class="text-gray-600 text-sm mt-4 text-center">By signing in, you can track orders and save preferences.</p>
+        </div>
+    </div>
+
+    <!-- Hero Section with Parallax -->
+    <section id="home" class="parallax relative h-[80vh] flex items-center justify-center text-center text-white" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
+        <div class="relative z-10 bg-black bg-opacity-60 p-10 rounded-xl animate-fade-in">
+            <h2 class="text-5xl font-bold mb-4">Welcome to Inshiyaa</h2>
+            <p class="text-xl mb-6">Explore Elegant Women's Clothing & Three-Piece Sets</p>
+            <a href="#products" class="bg-yellow-400 text-black px-8 py-3 rounded-full hover:bg-yellow-500 transition font-semibold">Shop Now</a>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-8 text-purple-800">Our Collections</h2>
+            <!-- Filters -->
+            <div class="flex justify-center space-x-4 mb-8">
+                <select id="category-filter" class="border rounded-lg p-2 bg-white">
+                    <option value="all">All Categories</option>
+                    <option value="three-piece">Three-Piece Sets</option>
+                    <option value="kurti">Kurtis</option>
+                    <option value="saree">Sarees</option>
+                    <option value="salwar">Salwars</option>
+                </select>
+                <select id="price-filter" class="border rounded-lg p-2 bg-white">
+                    <option value="all">All Prices</option>
+                    <option value="low">BDT 0 - 2000</option>
+                    <option value="mid">BDT 2000 - 3000</option>
+                    <option value="high">BDT 3000+</option>
+                </select>
+            </div>
+            <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <!-- Products will be dynamically added here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Quick View Modal -->
+    <div id="product-modal" class="modal">
+        <div class="bg-white p-8 rounded-lg max-w-lg w-full relative">
+            <button id="close-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800"><i class="fas fa-times"></i></button>
+            <img id="modal-image" src="" alt="" class="w-full h-64 object-cover rounded-lg mb-4 lazy-load">
+            <h3 id="modal-name" class="text-2xl font-bold text-gray-800"></h3>
+            <p id="modal-description" class="text-gray-600"></p>
+            <p id="modal-price" class="text-lg font-semibold text-purple-800 mt-2"></p>
+            <div class="mt-4">
+                <label class="block text-gray-700">Size:</label>
+                <select id="modal-size" class="border rounded-lg p-2 w-full">
+                    <option value="S">Small</option>
+                    <option value="M">Medium</option>
+                    <option value="L">Large</option>
+                </select>
+            </div>
+            <div class="mt-4">
+                <label class="block text-gray-700">Color:</label>
+                <select id="modal-color" class="border rounded-lg p-2 w-full">
+                    <option value="Red">Red</option>
+                    <option value="Blue">Blue</option>
+                    <option value="Black">Black</option>
+                </select>
+            </div>
+            <button id="modal-add-to-cart" class="bg-purple-800 text-white px-6 py-2 rounded-full mt-6 hover:bg-purple-900 transition w-full">Add to Cart</button>
+        </div>
+    </div>
+
+    <!-- About Section with Parallax -->
+    <section id="about" class="parallax py-8 relative text-center text-white" style="background-image: url('https://images.unsplash.com/photo-1515886657613-9f3515b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80'); min-height: 60vh;">
+        <div class="relative z-10 container mx-auto px-4 py-20">
+            <h2 class="text-4xl font-bold mb-6 animate-fade-in">About Inshiyaa</h2>
+            <p class="text-lg mb-8 max-w-2xl mx-auto">Inshiyaa is your destination for stylish and affordable women's fashion, specializing in elegant three-piece sets. Based in Bangladesh, we empower women to shine with confidence. Follow us on <a href="https://www.facebook.com/Inshiyaa" target="_blank" class="text-yellow-300 hover:underline">Facebook</a> for live sales and exclusive offers!</p>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="py-16 bg-purple-800 text-white text-center">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold mb-4 animate-fade-in">Join Our Newsletter</h2>
+            <p class="text-lg mb-6">Stay updated with the latest collections and exclusive offers!</p>
+            <div class="flex justify-center">
+                <input type="email" id="newsletter-email" placeholder="Enter your email" class="p-3 rounded-l-lg w-64 border-none focus:outline-none text-gray-800">
+                <button id="newsletter-submit" class="bg-yellow-400 text-black p-3 rounded-r-lg hover:bg-yellow-500 transition">Subscribe</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl font-bold mb-6 text-purple-800 animate-fade-in">Get in Touch</h2>
+            <p class="text-lg mb-8">We'd love to hear from you! Reach out for inquiries or support.</p>
+            <div class="flex justify-center space-x-6 mb-8">
+                <p><i class="fas fa-envelope mr-2"></i> support@inshiyaa.com</p>
+                <p><i class="fas fa-phone mr-2"></i> +880 1234 567 890</p>
+            </div>
+            <a href="https://www.facebook.com/Inshiyaa" target="_blank" class="bg-purple-800 text-white px-8 py-3 rounded-full hover:bg-purple-900 transition">Connect on Facebook</a>
+        </div>
+    </section>
+
+    <!-- Cart Section -->
+    <section id="cart" class="py-20 bg-gradient-to-r from-purple-100 to-pink-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-12 text-purple-800">Your Cart</h2>
+            <div id="cart-items" class="space-y-6 max-w-2xl mx-auto">
+                <!-- Cart items will be dynamically added here -->
+            </div>
+            <p id="cart-total" class="text-2xl font-bold mt-8 text-center">Total: BDT 0</p>
+            <button id="checkout-btn" class="block mx-auto bg-yellow-400 text-black px-8 py-3 rounded-full mt-8 hover:bg-yellow-500 transition">Proceed to Checkout</button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-purple-800 to-pink-700 text-white py-8 text-center">
+        <div class="container mx-auto px-4">
+            <p class="mb-4">&copy; 2025 Inshiyaa. All rights reserved.</p>
+            <div class="flex justify-center space-x-6">
+                <a href="https://www.facebook.com/Inshiyaa" target="_blank" class="hover:text-yellow-300"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="hover:text-yellow-300"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="hover:text-yellow-300"><i class="fab fa-whatsapp"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample product data with specific clothing images
+        const products = [
+            { id: 1, name: "Elegant Three-Piece Set", price: 2500, image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80", description: "Perfect for festive occasions!", category: "three-piece" },
+            { id: 2, name: "Floral Kurti", price: 1500, image: "https://images.unsplash.com/photo-1614091109082-51ef07f8ddbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80", description: "Light and comfortable.", category: "kurti" },
+            { id: 3, name: "Casual Saree", price: 3500, image: "https://images.unsplash.com/photo-1583391733988-8b3f6b1362aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80", description: "Elegant and timeless.", category: "saree" },
+            { id: 4, name: "Embroidered Salwar", price: 2000, image: "https://images.unsplash.com/photo-1623079846566-b8813de1f479?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80", description: "Intricate designs.", category: "salwar" }
+        ];
+
+        // Load cart from localStorage
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        // Function to save cart to localStorage
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        // Google Sign-In callback
+        function onSignIn(googleUser) {
+            const profile = googleUser.getBasicProfile();
+            const userInfo = {
+                id: profile.getId(),
+                name: profile.getName(),
+                email: profile.getEmail(),
+                image: profile.getImageUrl()
+            };
+            localStorage.setItem('user', JSON.stringify(userInfo));
+            document.getElementById('sign-in-modal').classList.remove('show');
+            document.getElementById('sign-in-btn').classList.add('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-info').textContent = `Hi, ${userInfo.name}`;
+            // Add sign-out button
+            document.getElementById('user-info').innerHTML += ` <button id="sign-out-btn" class="text-yellow-300 hover:underline">Sign Out</button>`;
+            document.getElementById('sign-out-btn').addEventListener('click', () => {
+                gapi.auth2.getAuthInstance().signOut().then(() => {
+                    localStorage.removeItem('user');
+                    document.getElementById('sign-in-btn').classList.remove('hidden');
+                    document.getElementById('user-info').classList.add('hidden');
+                    document.getElementById('user-info').textContent = '';
+                });
+            });
+        }
+
+        // Function to display products
+        function displayProducts(filteredProducts = products) {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
+            filteredProducts.forEach(product => {
+                const productCard = `
+                    <div class="product-card bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in">
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-64 object-cover rounded-lg mb-4 lazy-load">
+                        <h3 class="text-xl font-bold text-gray-800">${product.name}</h3>
+                        <p class="text-gray-600">${product.description}</p>
+                        <p class="text-lg font-semibold text-purple-800 mt-2">BDT ${product.price}</p>
+                        <div class="flex space-x-2 mt-4">
+                            <button onclick="openQuickView(${product.id})" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300 transition">Quick View</button>
+                            <button onclick="addToCart(${product.id}, 'M', 'Red')" class="bg-purple-800 text-white px-4 py-2 rounded-full hover:bg-purple-900 transition">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+                productList.innerHTML += productCard;
+            });
+            lazyLoadImages();
+        }
+
+        // Function to filter products
+        function filterProducts() {
+            const category = document.getElementById('category-filter').value;
+            const price = document.getElementById('price-filter').value;
+            let filtered = products;
+
+            if (category !== 'all') {
+                filtered = filtered.filter(p => p.category === category);
+            }
+
+            if (price !== 'all') {
+                if (price === 'low') filtered = filtered.filter(p => p.price <= 2000);
+                else if (price === 'mid') filtered = filtered.filter(p => p.price > 2000 && p.price <= 3000);
+                else if (price === 'high') filtered = filtered.filter(p => p.price > 3000);
+            }
+
+            displayProducts(filtered);
+        }
+
+        // Add filter event listeners
+        document.getElementById('category-filter').addEventListener('change', filterProducts);
+        document.getElementById('price-filter').addEventListener('change', filterProducts);
+
+        // Function to add item to cart
+        function addToCart(productId, size, color) {
+            const product = products.find(p => p.id === productId);
+            cart.push({ ...product, size, color });
+            saveCart();
+            updateCart();
+        }
+
+        // Function to update cart display
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
+            const cartPreview = document.getElementById('cart-preview-content');
+            cartItems.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartPreview.textContent = 'Your cart is empty';
+                cartItems.innerHTML = '<p class="text-center text-gray-600">Your cart is empty</p>';
+            } else {
+                let previewContent = '';
+                cart.forEach((item, index) => {
+                    total += item.price;
+                    const cartItem = `
+                        <div class="flex justify-between items-center bg-white p-6 rounded-lg shadow-lg">
+                            <div class="flex items-center">
+                                <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg mr-4 lazy-load">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">${item.name}</h3>
+                                    <p class="text-gray-600">Size: ${item.size}, Color: ${item.color}</p>
+                                    <p class="text-purple-800">BDT ${item.price}</p>
+                                </div>
+                            </div>
+                            <button onclick="removeFromCart(${index})" class="text-red-600 hover:text-red-800 transition"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    cartItems.innerHTML += cartItem;
+                    previewContent += `<p>${item.name} - BDT ${item.price}</p>`;
+                });
+                cartPreview.innerHTML = previewContent;
+            }
+
+            cartCount.textContent = cart.length;
+            cartTotal.textContent = `Total: BDT ${total}`;
+            lazyLoadImages();
+        }
+
+        // Function to remove item from cart
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCart();
+            updateCart();
+        }
+
+        // Cart preview hover
+        const cartLink = document.querySelector('a[href="#cart"]');
+        const cartPreview = document.getElementById('cart-preview');
+        cartLink.addEventListener('mouseenter', () => cartPreview.classList.remove('hidden'));
+        cartLink.addEventListener('mouseleave', () => cartPreview.classList.add('hidden'));
+
+        // Function to open quick view modal
+        function openQuickView(productId) {
+            const product = products.find(p => p.id === productId);
+            document.getElementById('modal-image').src = product.image;
+            document.getElementById('modal-name').textContent = product.name;
+            document.getElementById('modal-description').textContent = product.description;
+            document.getElementById('modal-price').textContent = `BDT ${product.price}`;
+            document.getElementById('modal-add-to-cart').onclick = () => {
+                const size = document.getElementById('modal-size').value;
+                const color = document.getElementById('modal-color').value;
+                addToCart(product.id, size, color);
+                document.getElementById('product-modal').classList.remove('show');
+            };
+            document.getElementById('product-modal').classList.add('show');
+        }
+
+        // Close product modal
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('product-modal').classList.remove('show');
+        });
+
+        // Sign-in modal
+        document.getElementById('sign-in-btn').addEventListener('click', () => {
+            document.getElementById('sign-in-modal').classList.add('show');
+        });
+        document.getElementById('close-sign-in-modal').addEventListener('click', () => {
+            document.getElementById('sign-in-modal').classList.remove('show');
+        });
+        document.getElementById('facebook-sign-in').addEventListener('click', () => {
+            alert('Facebook Sign-In: Integrate with Facebook OAuth for full functionality.');
+        });
+
+        // Check if user is already signed in
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            document.getElementById('sign-in-btn').classList.add('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-info').textContent = `Hi, ${user.name}`;
+            document.getElementById('user-info').innerHTML += ` <button id="sign-out-btn" class="text-yellow-300 hover:underline">Sign Out</button>`;
+            document.getElementById('sign-out-btn').addEventListener('click', () => {
+                gapi.auth2.getAuthInstance().signOut().then(() => {
+                    localStorage.removeItem('user');
+                    document.getElementById('sign-in-btn').classList.remove('hidden');
+                    document.getElementById('user-info').classList.add('hidden');
+                    document.getElementById('user-info').textContent = '';
+                });
+            });
+        }
+
+        // Carousel functionality
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-item');
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.style.transform = `translateX(${(i - index) * 100}%)`;
+            });
+        }
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+        setInterval(nextSlide, 5000);
+        showSlide(currentSlide);
+
+        // Lazy load images
+        function lazyLoadImages() {
+            const images = document.querySelectorAll('.lazy-load');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('loaded');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+            images.forEach(img => observer.observe(img));
+        }
+
+        // Newsletter signup
+        document.getElementById('newsletter-submit').addEventListener('click', () => {
+            const email = document.getElementById('newsletter-email').value;
+            if (email) {
+                alert('Thank you for subscribing!');
+                document.getElementById('newsletter-email').value = '';
+            } else {
+                alert('Please enter a valid email address.');
+            }
+        });
+
+        // Checkout button
+        document.getElementById('checkout-btn').addEventListener('click', () => {
+            if (cart.length > 0) {
+                alert('Redirecting to checkout (integrate with bKash/Nagad).');
+            } else {
+                alert('Your cart is empty.');
+            }
+        });
+
+        // Initialize on page load
+        displayProducts();
+        updateCart();
+    </script>
+</body>
+</html>
