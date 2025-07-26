@@ -208,7 +208,7 @@
     <section id="about" class="parallax py-8 relative text-center text-white" style="background-image: url('https://images.unsplash.com/photo-1515886657613-9f3515b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80'); min-height: 60vh;">
         <div class="relative z-10 container mx-auto px-4 py-20">
             <h2 class="text-4xl font-bold mb-6 animate-fade-in">About Inshiyaa</h2>
-            <p class="text-lg mb-8 max-w-2xl mx-auto">Inshiyaa is your destination for stylish and affordable women's fashion, specializing in elegant three-piece sets. Based in Bangladesh, we empower women to shine with confidence. Follow us on <a href="https://www.facebook.com/Inshiyaa" target="_blank" class="text-yellow-300 hover:underline">Facebook</a> for live sales and exclusive offers!</p>
+            <p class="text-lg mb-8 max-w-2xl mx-auto">Inshiyaa দিচ্ছে রিজেনেবল প্রাইজের মধ্যে সম্পূর্ণ প্রিমিয়াম কোয়ালিটি প্রোডাক্টের নিশ্চয়তা। #womenclothing #shop<br><br>Inshiyaa offers premium quality women's clothing at reasonable prices. Follow us on <a href="https://www.facebook.com/inshiyaa1" target="_blank" class="text-yellow-300 hover:underline">Facebook</a> and <a href="https://www.instagram.com/inshiyaa3" target="_blank" class="text-yellow-300 hover:underline">Instagram</a> for live sales and exclusive offers!</p>
         </div>
     </section>
 
@@ -230,10 +230,11 @@
             <h2 class="text-4xl font-bold mb-6 text-purple-800 animate-fade-in">Get in Touch</h2>
             <p class="text-lg mb-8">We'd love to hear from you! Reach out for inquiries or support.</p>
             <div class="flex justify-center space-x-6 mb-8">
-                <p><i class="fas fa-envelope mr-2"></i> support@inshiyaa.com</p>
-                <p><i class="fas fa-phone mr-2"></i> +880 1234 567 890</p>
+                <p><i class="fas fa-envelope mr-2"></i> inshiyaa196@gmail.com</p>
+                <p><i class="fas fa-phone mr-2"></i> +880 1916421045</p>
+                <p><i class="fab fa-whatsapp mr-2"></i> +880 1916421045</p>
             </div>
-            <a href="https://www.facebook.com/Inshiyaa" target="_blank" class="bg-purple-800 text-white px-8 py-3 rounded-full hover:bg-purple-900 transition">Connect on Facebook</a>
+            <a href="https://www.facebook.com/inshiyaa1" target="_blank" class="bg-purple-800 text-white px-8 py-3 rounded-full hover:bg-purple-900 transition">Connect on Facebook</a>
         </div>
     </section>
 
@@ -254,9 +255,9 @@
         <div class="container mx-auto px-4">
             <p class="mb-4">&copy; 2025 Inshiyaa. All rights reserved.</p>
             <div class="flex justify-center space-x-6">
-                <a href="https://www.facebook.com/Inshiyaa" target="_blank" class="hover:text-yellow-300"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" class="hover:text-yellow-300"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="hover:text-yellow-300"><i class="fab fa-whatsapp"></i></a>
+                <a href="https://www.facebook.com/inshiyaa1" target="_blank" class="hover:text-yellow-300"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/inshiyaa3" target="_blank" class="hover:text-yellow-300"><i class="fab fa-instagram"></i></a>
+                <a href="https://wa.me/+8801916421045" target="_blank" class="hover:text-yellow-300"><i class="fab fa-whatsapp"></i></a>
             </div>
         </div>
     </footer>
@@ -292,7 +293,6 @@
             document.getElementById('sign-in-btn').classList.add('hidden');
             document.getElementById('user-info').classList.remove('hidden');
             document.getElementById('user-info').textContent = `Hi, ${userInfo.name}`;
-            // Add sign-out button
             document.getElementById('user-info').innerHTML += ` <button id="sign-out-btn" class="text-yellow-300 hover:underline">Sign Out</button>`;
             document.getElementById('sign-out-btn').addEventListener('click', () => {
                 gapi.auth2.getAuthInstance().signOut().then(() => {
